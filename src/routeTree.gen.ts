@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedFixturesRouteImport } from './routes/_authenticated/fixtures'
+import { Route as AuthenticatedMatchMatchIdRouteImport } from './routes/_authenticated/match.$matchId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -27,27 +29,50 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFixturesRoute = AuthenticatedFixturesRouteImport.update({
+  id: '/fixtures',
+  path: '/fixtures',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMatchMatchIdRoute =
+  AuthenticatedMatchMatchIdRouteImport.update({
+    id: '/match/$matchId',
+    path: '/match/$matchId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/fixtures': typeof AuthenticatedFixturesRoute
+  '/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/fixtures': typeof AuthenticatedFixturesRoute
+  '/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/fixtures': typeof AuthenticatedFixturesRoute
+  '/_authenticated/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard'
+  fullPaths: '/' | '/dashboard' | '/fixtures' | '/match/$matchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard'
-  id: '__root__' | '/' | '/_authenticated' | '/_authenticated/dashboard'
+  to: '/' | '/dashboard' | '/fixtures' | '/match/$matchId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/fixtures'
+    | '/_authenticated/match/$matchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +103,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/fixtures': {
+      id: '/_authenticated/fixtures'
+      path: '/fixtures'
+      fullPath: '/fixtures'
+      preLoaderRoute: typeof AuthenticatedFixturesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/match/$matchId': {
+      id: '/_authenticated/match/$matchId'
+      path: '/match/$matchId'
+      fullPath: '/match/$matchId'
+      preLoaderRoute: typeof AuthenticatedMatchMatchIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFixturesRoute: typeof AuthenticatedFixturesRoute
+  AuthenticatedMatchMatchIdRoute: typeof AuthenticatedMatchMatchIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFixturesRoute: AuthenticatedFixturesRoute,
+  AuthenticatedMatchMatchIdRoute: AuthenticatedMatchMatchIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
