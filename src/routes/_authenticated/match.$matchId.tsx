@@ -77,6 +77,7 @@ function MatchCenter() {
       return () => clearTimeout(t);
     }
     lastCount.current = big.length;
+    return undefined;
   }, [shown.length, isLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!m || !home || !away) return <p className="text-muted-foreground">טוען משחק...</p>;

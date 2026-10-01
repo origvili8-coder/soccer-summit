@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export function PlayerAvatar({ src, name, className }: { src?: string | null; name: string; className?: string }) {
+export function PlayerAvatar({ src, name, className }: { src?: string | null | undefined; name: string; className?: string }) {
   const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   return (
     <div
@@ -14,7 +14,7 @@ export function PlayerAvatar({ src, name, className }: { src?: string | null; na
   );
 }
 
-export function TeamLogo({ src, name, color, className }: { src?: string | null; name: string; color?: string; className?: string }) {
+export function TeamLogo({ src, name, color, className }: { src?: string | null | undefined; name: string; color?: string | undefined; className?: string }) {
   return (
     <div
       className={cn("flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-black", className)}
