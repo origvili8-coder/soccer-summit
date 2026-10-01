@@ -14,16 +14,362 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      matches: {
+        Row: {
+          away_ready: boolean
+          away_score: number
+          away_team_id: string
+          created_at: string
+          events: Json
+          home_ready: boolean
+          home_score: number
+          home_team_id: string
+          id: string
+          round_id: string
+          started_at: string | null
+          stats: Json
+          status: string
+        }
+        Insert: {
+          away_ready?: boolean
+          away_score?: number
+          away_team_id: string
+          created_at?: string
+          events?: Json
+          home_ready?: boolean
+          home_score?: number
+          home_team_id: string
+          id?: string
+          round_id: string
+          started_at?: string | null
+          stats?: Json
+          status?: string
+        }
+        Update: {
+          away_ready?: boolean
+          away_score?: number
+          away_team_id?: string
+          created_at?: string
+          events?: Json
+          home_ready?: boolean
+          home_score?: number
+          home_team_id?: string
+          id?: string
+          round_id?: string
+          started_at?: string | null
+          stats?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          offer_id: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          offer_id?: string | null
+          recipient_id: string
+          sender_id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          offer_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "transfer_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          asking_price: number
+          assists: number
+          avatar_url: string | null
+          created_at: string
+          goals: number
+          id: string
+          name: string
+          position: Database["public"]["Enums"]["player_position"]
+          rating: number
+          red_cards: number
+          suspended_matches: number
+          team_id: string | null
+          transfer_listed: boolean
+          yellow_cards: number
+        }
+        Insert: {
+          asking_price?: number
+          assists?: number
+          avatar_url?: string | null
+          created_at?: string
+          goals?: number
+          id?: string
+          name: string
+          position: Database["public"]["Enums"]["player_position"]
+          rating?: number
+          red_cards?: number
+          suspended_matches?: number
+          team_id?: string | null
+          transfer_listed?: boolean
+          yellow_cards?: number
+        }
+        Update: {
+          asking_price?: number
+          assists?: number
+          avatar_url?: string | null
+          created_at?: string
+          goals?: number
+          id?: string
+          name?: string
+          position?: Database["public"]["Enums"]["player_position"]
+          rating?: number
+          red_cards?: number
+          suspended_matches?: number
+          team_id?: string | null
+          transfer_listed?: boolean
+          yellow_cards?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          team_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          id: string
+          team_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          team_id?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rounds: {
+        Row: {
+          created_at: string
+          id: string
+          number: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          number: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          number?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      teams: {
+        Row: {
+          budget: number
+          color: string
+          created_at: string
+          formation: string
+          id: string
+          lineup: Json
+          logo_url: string | null
+          name: string
+          short_name: string
+        }
+        Insert: {
+          budget?: number
+          color?: string
+          created_at?: string
+          formation?: string
+          id?: string
+          lineup?: Json
+          logo_url?: string | null
+          name: string
+          short_name?: string
+        }
+        Update: {
+          budget?: number
+          color?: string
+          created_at?: string
+          formation?: string
+          id?: string
+          lineup?: Json
+          logo_url?: string | null
+          name?: string
+          short_name?: string
+        }
+        Relationships: []
+      }
+      transfer_offers: {
+        Row: {
+          amount: number
+          buyer_team_id: string
+          created_at: string
+          created_by: string
+          id: string
+          player_id: string
+          seller_team_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          buyer_team_id: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          player_id: string
+          seller_team_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          buyer_team_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          player_id?: string
+          seller_team_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_offers_buyer_team_id_fkey"
+            columns: ["buyer_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_offers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_offers_seller_team_id_fkey"
+            columns: ["seller_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_offer: { Args: { _offer_id: string }; Returns: undefined }
+      cancel_or_reject_offer: {
+        Args: { _offer_id: string }
+        Returns: undefined
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      my_team_id: { Args: never; Returns: string }
+      save_lineup: {
+        Args: { _formation: string; _lineup: Json }
+        Returns: undefined
+      }
+      set_transfer_listing: {
+        Args: { _listed: boolean; _player_id: string; _price: number }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "manager"
+      player_position: "GK" | "DEF" | "MID" | "FWD"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +496,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "manager"],
+      player_position: ["GK", "DEF", "MID", "FWD"],
+    },
   },
 } as const
