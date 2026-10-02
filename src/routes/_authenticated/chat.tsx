@@ -7,7 +7,7 @@ import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useMe, useMessages, useOffers, usePlayers, useProfiles, useTeams, type Offer } from "@/lib/data";
 import { formatMoney } from "@/lib/formations";
-import { sendOffer } from "./transfers";
+import { sendOffer } from "@/lib/offers";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({

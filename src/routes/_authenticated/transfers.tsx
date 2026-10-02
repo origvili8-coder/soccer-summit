@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar, PosBadge, TeamLogo } from "@/components/PlayerAvatar";
 import { useMe, usePlayers, useProfiles, useTeams, type Player } from "@/lib/data";
 import { formatMoney } from "@/lib/formations";
+import { sendOffer } from "@/lib/offers";
 
 export const Route = createFileRoute("/_authenticated/transfers")({
   head: () => ({
@@ -19,18 +19,6 @@ export const Route = createFileRoute("/_authenticated/transfers")({
   }),
   component: TransfersPage,
 });
-
-export async function sendOffer(p: Player, myTeamId: string, userId: string, sellerUserId: string | undefined, amount: number) {
-  const { data, error } = await supabase
-    .from("transfer_offers")
-    .insert({ player_id: p.id, buyer_team_id: myTeamId, seller_team_id: p.team_id!, amount, created_by: userId })
-    .select("id")
-    .single();
-  if (error) throw new Error(error.message);
-  if (sellerUserId) {
-    await supabase.from("messages").insert({ sender_id: userId, recipient_id: sellerUserId, body: `הצעה על ${p.name}: ${formatMoney(amount)}`, offer_id: data.id });
-  }
-}
 
 function TransfersPage() {
   const { data: me } = useMe();
