@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/match/$matchId")({
 });
 
 const ICON: Record<MatchEvent["type"], string> = {
-  goal: "⚽", yellow: "🟨", red: "🟥", save: "🧤", miss: "↗", foul: "✋", attack: "⚡",
+  goal: "⚽", yellow: "🟨", red: "🟥", save: "🧤", miss: "↗", foul: "✋", attack: "⚡", sub: "🔄",
 };
 
 function MatchCenter() {
