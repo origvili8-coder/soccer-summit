@@ -10,6 +10,8 @@ export type MatchEvent = {
   playerName?: string;
   assistId?: string;
   assistName?: string;
+  outId?: string;
+  outName?: string;
   text: string;
 };
 export type MatchStats = {
