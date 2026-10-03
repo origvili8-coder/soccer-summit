@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar, PosBadge, TeamLogo } from "@/components/PlayerAvatar";
 import { fileToDataUrl, useMatches, useMe, usePlayers, useProfiles, useRounds, useTeams, type Player, type Team } from "@/lib/data";
-import { formatMoney } from "@/lib/formations";
+import { DETAILED, DETAIL_GROUP, DETAIL_LABEL, formatMoney, type Detail } from "@/lib/formations";
 import { activateNextRound, adminPlayMatch, createManager, deleteManager, updateManager } from "@/lib/league.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -105,12 +105,12 @@ function PlayersAdmin() {
   const { data: players = [] } = usePlayers();
   const run = useRun();
   const [filter, setFilter] = useState("");
-  const blank = { name: "", position: "MID" as Player["position"], rating: 70, team_id: "", avatar_url: "" };
+  const blank = { name: "", detailed_position: "CM" as Detail, rating: 70, team_id: "", avatar_url: "" };
   const [f, setF] = useState(blank);
   const save = async () => {
     if (!f.name) return;
-    if (await run(() => supabase.from("players").insert({ ...f, team_id: f.team_id || null, avatar_url: f.avatar_url || null }), "השחקן נוסף"))
-      setF({ ...blank, team_id: f.team_id, position: f.position });
+    if (await run(() => supabase.from("players").insert({ ...f, position: DETAIL_GROUP[f.detailed_position], team_id: f.team_id || null, avatar_url: f.avatar_url || null }), "השחקן נוסף"))
+      setF({ ...blank, team_id: f.team_id, detailed_position: f.detailed_position });
   };
   const upd = (p: Player, patch: Partial<Player>) => run(() => supabase.from("players").update(patch).eq("id", p.id));
   const shown = players.filter((p) => !filter || p.team_id === filter || (filter === "free" && !p.team_id));
@@ -118,8 +118,8 @@ function PlayersAdmin() {
     <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
       <Card title="שחקן חדש">
         <input className={inp + " w-full"} placeholder="שם השחקן" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <select className={inp + " w-full"} value={f.position} onChange={(e) => setF({ ...f, position: e.target.value as Player["position"] })}>
-          <option value="GK">שוער</option><option value="DEF">הגנה</option><option value="MID">קישור</option><option value="FWD">התקפה</option>
+        <select className={inp + " w-full"} value={f.detailed_position} onChange={(e) => setF({ ...f, detailed_position: e.target.value as Detail })}>
+          {DETAILED.map((d) => <option key={d} value={d}>{d} — {DETAIL_LABEL[d]}</option>)}
         </select>
         <label className="block text-sm">רייטינג<input type="number" min={1} max={99} className={inp + " w-full"} value={f.rating} onChange={(e) => setF({ ...f, rating: +e.target.value })} /></label>
         <select className={inp + " w-full"} value={f.team_id} onChange={(e) => setF({ ...f, team_id: e.target.value })}>
@@ -142,6 +142,9 @@ function PlayersAdmin() {
               </label>
               <b className="min-w-24 flex-1">{p.name}</b>
               <PosBadge pos={p.position} />
+              <select className={inp} value={p.detailed_position} onChange={(e) => upd(p, { detailed_position: e.target.value, position: DETAIL_GROUP[e.target.value as Detail] })}>
+                {DETAILED.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
               <input type="number" defaultValue={p.rating} className={inp + " w-16"} onBlur={(e) => +e.target.value !== p.rating && upd(p, { rating: +e.target.value })} />
               <select className={inp} value={p.team_id ?? ""} onChange={(e) => upd(p, { team_id: e.target.value || null })}>
                 <option value="">חופשי</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.short_name}</option>)}

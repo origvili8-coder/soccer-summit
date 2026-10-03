@@ -15,6 +15,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFixturesRouteImport } from './routes/_authenticated/fixtures'
+import { Route as AuthenticatedNewsRouteImport } from './routes/_authenticated/news'
 import { Route as AuthenticatedSquadRouteImport } from './routes/_authenticated/squad'
 import { Route as AuthenticatedTransfersRouteImport } from './routes/_authenticated/transfers'
 import { Route as AuthenticatedMatchMatchIdRouteImport } from './routes/_authenticated/match.$matchId'
@@ -48,6 +49,11 @@ const AuthenticatedFixturesRoute = AuthenticatedFixturesRouteImport.update({
   path: '/fixtures',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNewsRoute = AuthenticatedNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSquadRoute = AuthenticatedSquadRouteImport.update({
   id: '/squad',
   path: '/squad',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fixtures': typeof AuthenticatedFixturesRoute
+  '/news': typeof AuthenticatedNewsRoute
   '/squad': typeof AuthenticatedSquadRoute
   '/transfers': typeof AuthenticatedTransfersRoute
   '/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fixtures': typeof AuthenticatedFixturesRoute
+  '/news': typeof AuthenticatedNewsRoute
   '/squad': typeof AuthenticatedSquadRoute
   '/transfers': typeof AuthenticatedTransfersRoute
   '/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fixtures': typeof AuthenticatedFixturesRoute
+  '/_authenticated/news': typeof AuthenticatedNewsRoute
   '/_authenticated/squad': typeof AuthenticatedSquadRoute
   '/_authenticated/transfers': typeof AuthenticatedTransfersRoute
   '/_authenticated/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/fixtures'
+    | '/news'
     | '/squad'
     | '/transfers'
     | '/match/$matchId'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/fixtures'
+    | '/news'
     | '/squad'
     | '/transfers'
     | '/match/$matchId'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/dashboard'
     | '/_authenticated/fixtures'
+    | '/_authenticated/news'
     | '/_authenticated/squad'
     | '/_authenticated/transfers'
     | '/_authenticated/match/$matchId'
@@ -180,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFixturesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/news': {
+      id: '/_authenticated/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof AuthenticatedNewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/squad': {
       id: '/_authenticated/squad'
       path: '/squad'
@@ -209,6 +228,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFixturesRoute: typeof AuthenticatedFixturesRoute
+  AuthenticatedNewsRoute: typeof AuthenticatedNewsRoute
   AuthenticatedSquadRoute: typeof AuthenticatedSquadRoute
   AuthenticatedTransfersRoute: typeof AuthenticatedTransfersRoute
   AuthenticatedMatchMatchIdRoute: typeof AuthenticatedMatchMatchIdRoute
@@ -219,6 +239,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFixturesRoute: AuthenticatedFixturesRoute,
+  AuthenticatedNewsRoute: AuthenticatedNewsRoute,
   AuthenticatedSquadRoute: AuthenticatedSquadRoute,
   AuthenticatedTransfersRoute: AuthenticatedTransfersRoute,
   AuthenticatedMatchMatchIdRoute: AuthenticatedMatchMatchIdRoute,
