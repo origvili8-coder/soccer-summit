@@ -137,7 +137,7 @@ function MatchCenter() {
             {m.status === "scheduled" ? (
               <p className="text-4xl font-black text-muted-foreground">VS</p>
             ) : (
-              <p className="text-6xl font-black tabular" dir="ltr">{score[0]} : {score[1]}</p>
+              <p className="flex gap-3 text-6xl font-black tabular"><span>{score[0]}</span><span>:</span><span>{score[1]}</span></p>
             )}
             <p className={cn("mt-1 text-sm font-bold", isLive ? "text-destructive" : "text-muted-foreground")}>
               {m.status === "scheduled" ? `מחזור ${round?.number ?? ""}` : isLive ? `● LIVE ${minute}'` : "סיום · 90'"}
