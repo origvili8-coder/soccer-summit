@@ -119,12 +119,37 @@ export type Database = {
           },
         ]
       }
+      news: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          title: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          title?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           asking_price: number
           assists: number
           avatar_url: string | null
           created_at: string
+          detailed_position: string
           goals: number
           id: string
           name: string
@@ -141,6 +166,7 @@ export type Database = {
           assists?: number
           avatar_url?: string | null
           created_at?: string
+          detailed_position?: string
           goals?: number
           id?: string
           name: string
@@ -157,6 +183,7 @@ export type Database = {
           assists?: number
           avatar_url?: string | null
           created_at?: string
+          detailed_position?: string
           goals?: number
           id?: string
           name?: string
@@ -233,6 +260,7 @@ export type Database = {
       }
       teams: {
         Row: {
+          bench: Json
           budget: number
           color: string
           created_at: string
@@ -244,6 +272,7 @@ export type Database = {
           short_name: string
         }
         Insert: {
+          bench?: Json
           budget?: number
           color?: string
           created_at?: string
@@ -255,6 +284,7 @@ export type Database = {
           short_name?: string
         }
         Update: {
+          bench?: Json
           budget?: number
           color?: string
           created_at?: string
@@ -360,6 +390,10 @@ export type Database = {
       my_team_id: { Args: never; Returns: string }
       save_lineup: {
         Args: { _formation: string; _lineup: Json }
+        Returns: undefined
+      }
+      save_lineup_v2: {
+        Args: { _bench: Json; _formation: string; _lineup: Json }
         Returns: undefined
       }
       set_transfer_listing: {
