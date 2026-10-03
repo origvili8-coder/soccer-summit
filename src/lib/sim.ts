@@ -8,8 +8,8 @@ export type MatchEvent = {
   side: Side;
   playerId?: string;
   playerName?: string;
-  assistId?: string;
-  assistName?: string;
+  assistId?: string | undefined;
+  assistName?: string | undefined;
   outId?: string;
   outName?: string;
   text: string;
