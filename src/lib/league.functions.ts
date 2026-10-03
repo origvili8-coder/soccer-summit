@@ -148,3 +148,45 @@ export const activateNextRound = createServerFn({ method: "POST" })
     await supabaseAdmin.from("rounds").update({ status: "active" }).eq("id", next.id);
     return { number: next.number };
   });
+
+export const makeSubstitution = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ matchId: z.string().uuid(), outId: z.string().uuid(), inId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { substitute } = await import("./match-runner.server");
+    const { data: me } = await supabaseAdmin.from("profiles").select("team_id").eq("id", context.userId).single();
+    const { data: m } = await supabaseAdmin.from("matches").select("home_team_id, away_team_id").eq("id", data.matchId).single();
+    if (!m || !me?.team_id) throw new Error("אינך מאמן במשחק הזה");
+    const side = me.team_id === m.home_team_id ? "home" : me.team_id === m.away_team_id ? "away" : null;
+    if (!side) throw new Error("אינך מאמן במשחק הזה");
+    await substitute(supabaseAdmin, data.matchId, side, data.outId, data.inId);
+    return { ok: true };
+  });
+
+export const announceTransfer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offerId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { publishNews } = await import("./news.server");
+    const kind = `transfer:${data.offerId}`;
+    const { data: exists } = await supabaseAdmin.from("news").select("id").eq("kind", kind).maybeSingle();
+    if (exists) return { ok: true };
+    const { data: o } = await supabaseAdmin.from("transfer_offers").select("*").eq("id", data.offerId).single();
+    if (!o || o.status !== "accepted") throw new Error("העסקה לא בוצעה");
+    const [{ data: p }, { data: teams }] = await Promise.all([
+      supabaseAdmin.from("players").select("name, detailed_position, rating").eq("id", o.player_id).single(),
+      supabaseAdmin.from("teams").select("id, name").in("id", [o.buyer_team_id, o.seller_team_id]),
+    ]);
+    const buyer = teams?.find((t) => t.id === o.buyer_team_id)?.name ?? "";
+    const seller = teams?.find((t) => t.id === o.seller_team_id)?.name ?? "";
+    const amount = `₪${(o.amount / 1_000_000).toFixed(1)}M`;
+    await publishNews(
+      supabaseAdmin,
+      kind,
+      `העברה רשמית: ${p?.name} (${p?.detailed_position}, רייטינג ${p?.rating}) עובר מ${seller} ל${buyer} תמורת ${amount}.`,
+      `רשמי: ${p?.name} עובר ל${buyer}`,
+    );
+    return { ok: true };
+  });
