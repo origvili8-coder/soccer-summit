@@ -4,7 +4,7 @@ export type SimPlayer = { id: string; name: string; position: Pos; rating: numbe
 export type Side = "home" | "away";
 export type MatchEvent = {
   minute: number;
-  type: "goal" | "yellow" | "red" | "save" | "miss" | "foul" | "attack";
+  type: "goal" | "yellow" | "red" | "save" | "miss" | "foul" | "attack" | "sub";
   side: Side;
   playerId?: string;
   playerName?: string;
@@ -39,7 +39,10 @@ function strength(ps: SimPlayer[]) {
   return ps.reduce((s, p) => s + p.rating, 0) / 11;
 }
 
-export function simulateMatch(homeXI: SimPlayer[], awayXI: SimPlayer[]) {
+export type Resume = { fromMinute: number; events: MatchEvent[]; possession: [number, number] };
+
+/** Simulate a match. With `resume`, events before fromMinute are kept and the XIs passed in are the players on the pitch at that moment. */
+export function simulateMatch(homeXI: SimPlayer[], awayXI: SimPlayer[], resume?: Resume) {
   const on: Record<Side, SimPlayer[]> = { home: [...homeXI], away: [...awayXI] };
   const yellows = new Map<string, number>();
   const events: MatchEvent[] = [];
@@ -47,8 +50,23 @@ export function simulateMatch(homeXI: SimPlayer[], awayXI: SimPlayer[]) {
   const stats: MatchStats = { possession: [0, 0], shots: [0, 0], onTarget: [0, 0], fouls: [0, 0] };
   const si = (s: Side) => (s === "home" ? 0 : 1);
   const other = (s: Side): Side => (s === "home" ? "away" : "home");
+  let start = 1;
+  if (resume) {
+    start = resume.fromMinute;
+    for (const e of resume.events.filter((e) => e.minute < start)) {
+      events.push(e);
+      const i = si(e.side);
+      if (e.type === "goal") { score[i]++; stats.shots[i]++; stats.onTarget[i]++; }
+      if (e.type === "save") { stats.shots[i]++; stats.onTarget[i]++; }
+      if (e.type === "miss") stats.shots[i]++;
+      if (e.type === "foul" || e.type === "yellow") stats.fouls[i]++;
+      if (e.type === "yellow" && e.playerId) yellows.set(e.playerId, (yellows.get(e.playerId) ?? 0) + 1);
+    }
+    const done = start - 1;
+    stats.possession = [Math.round((resume.possession[0] / 100) * done), Math.round((resume.possession[1] / 100) * done)];
+  }
 
-  for (let minute = 1; minute <= 90; minute++) {
+  for (let minute = start; minute <= 90; minute++) {
     const hs = strength(on.home) * 1.04; // home advantage
     const as = strength(on.away);
     const pHome = hs / (hs + as);
