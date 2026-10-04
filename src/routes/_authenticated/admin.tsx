@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar, PosBadge, TeamLogo } from "@/components/PlayerAvatar";
-import { fileToDataUrl, useMatches, useMe, usePlayers, useProfiles, useRounds, useTeams, type Player, type Team } from "@/lib/data";
+import { fileToDataUrl, useSettings, useMatches, useMe, usePlayers, useProfiles, useRounds, useTeams, type Player, type Team } from "@/lib/data";
 import { DETAILED, DETAIL_GROUP, DETAIL_LABEL, formatMoney, type Detail } from "@/lib/formations";
 import { activateNextRound, adminPlayMatch, createManager, deleteManager, updateManager } from "@/lib/league.functions";
 
@@ -44,9 +44,9 @@ function useRun() {
 
 function AdminPage() {
   const { data: me } = useMe();
-  const [tab, setTab] = useState<"teams" | "players" | "managers" | "rounds">("teams");
+  const [tab, setTab] = useState<"teams" | "players" | "managers" | "rounds" | "settings">("teams");
   if (me && !me.isAdmin) return <Empty>רק מנהל הליגה יכול לגשת למסך זה.</Empty>;
-  const tabs = { teams: "קבוצות", players: "שחקנים", managers: "מנג'רים", rounds: "מחזורים" } as const;
+  const tabs = { teams: "קבוצות", players: "שחקנים", managers: "מנג'רים", rounds: "מחזורים", settings: "אימונים וחלון העברות" } as const;
   return (
     <div>
       <PageHeader kicker="ADMIN CONTROL" title="פאנל ניהול" />
@@ -59,6 +59,7 @@ function AdminPage() {
       {tab === "players" && <PlayersAdmin />}
       {tab === "managers" && <ManagersAdmin />}
       {tab === "rounds" && <RoundsAdmin />}
+      {tab === "settings" && <SettingsAdmin />}
     </div>
   );
 }
@@ -244,6 +245,32 @@ function RoundsAdmin() {
           {r.status === "pending" && <button className="text-xs text-destructive" onClick={() => run(() => supabase.from("rounds").delete().eq("id", r.id))}>מחק מחזור</button>}
         </Card>
       ))}
+    </div>
+  );
+}
+
+function SettingsAdmin() {
+  const { data: st } = useSettings();
+  const run = useRun();
+  const [cost, setCost] = useState<string>("");
+  if (!st) return null;
+  const upd = (patch: Partial<typeof st>, ok: string) => run(() => supabase.from("league_settings").update(patch).eq("id", 1), ok);
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card title="חלון העברות">
+        <p className="text-sm">מצב: <b className={st.transfer_window_open ? "text-neon" : "text-destructive"}>{st.transfer_window_open ? "פתוח" : "סגור"}</b></p>
+        <p className="text-xs text-muted-foreground">כשהחלון סגור אי אפשר לשלוח או לאשר הצעות קנייה והשאלה.</p>
+        <button className={btn} onClick={() => upd({ transfer_window_open: !st.transfer_window_open }, st.transfer_window_open ? "החלון נסגר" : "החלון נפתח")}>
+          {st.transfer_window_open ? "סגור חלון העברות" : "פתח חלון העברות"}
+        </button>
+      </Card>
+      <Card title="מחיר אימון">
+        <p className="text-sm">כרגע: <b className="text-neon">{formatMoney(st.training_cost_per_point)}</b> לכל נקודת רייטינג</p>
+        <div className="flex gap-2">
+          <input type="number" className={inp + " flex-1"} placeholder="מחיר חדש (₪)" value={cost} onChange={(e) => setCost(e.target.value)} />
+          <button className={btn} disabled={!cost} onClick={async () => { if (await upd({ training_cost_per_point: Math.max(0, parseInt(cost, 10) || 0) }, "המחיר עודכן")) setCost(""); }}>שמור</button>
+        </div>
+      </Card>
     </div>
   );
 }

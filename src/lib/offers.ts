@@ -2,14 +2,14 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Player } from "./data";
 import { formatMoney } from "./formations";
 
-export async function sendOffer(p: Player, myTeamId: string, userId: string, sellerUserId: string | undefined, amount: number) {
+export async function sendOffer(p: Player, myTeamId: string, userId: string, sellerUserId: string | undefined, amount: number, loanRounds?: number) {
   const { data, error } = await supabase
     .from("transfer_offers")
-    .insert({ player_id: p.id, buyer_team_id: myTeamId, seller_team_id: p.team_id!, amount, created_by: userId })
+    .insert({ player_id: p.id, buyer_team_id: myTeamId, seller_team_id: p.team_id!, amount, created_by: userId, kind: loanRounds ? "loan" : "transfer", loan_rounds: loanRounds ?? null })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
   if (sellerUserId) {
-    await supabase.from("messages").insert({ sender_id: userId, recipient_id: sellerUserId, body: `הצעה על ${p.name}: ${formatMoney(amount)}`, offer_id: data.id });
+    await supabase.from("messages").insert({ sender_id: userId, recipient_id: sellerUserId, body: `${loanRounds ? `השאלה ל-${loanRounds} מחזורים` : "הצעה"} על ${p.name}: ${formatMoney(amount)}`, offer_id: data.id });
   }
 }

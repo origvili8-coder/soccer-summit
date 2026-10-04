@@ -100,7 +100,7 @@ function ChatPage() {
                     <div className={`pop-in max-w-[75%] rounded-xl p-3 text-sm ${mine ? "bg-neon/15" : "bg-secondary"}`}>
                       {o ? (
                         <div className="space-y-2">
-                          <div className="text-xs font-bold text-gold">הצעת העברה</div>
+                          <div className="text-xs font-bold text-gold">{o.kind === "loan" ? `הצעת השאלה · ${o.loan_rounds} מחזורים` : "הצעת העברה"}</div>
                           <div className="flex items-center gap-2">
                             <PlayerAvatar src={pl?.avatar_url} name={pl?.name ?? "?"} />
                             <div><b>{pl?.name}</b><div className="tabular text-neon">{formatMoney(o.amount)}</div></div>

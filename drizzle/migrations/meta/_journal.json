@@ -15,6 +15,13 @@
       "when": 1791022901883,
       "tag": "0001_positions_bench_news",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791072610567,
+      "tag": "0002_training_loans_window",
+      "breakpoints": true
     }
   ]
 }

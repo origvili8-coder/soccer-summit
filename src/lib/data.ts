@@ -113,3 +113,7 @@ export async function fileToDataUrl(file: File, size = 160): Promise<string> {
   ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
   return c.toDataURL("image/jpeg", 0.85);
 }
+
+export type Settings = Database["public"]["Tables"]["league_settings"]["Row"];
+export const useSettings = () =>
+  useQuery({ queryKey: ["settings"], queryFn: () => q<Settings>(supabase.from("league_settings").select("*").eq("id", 1).single()) });

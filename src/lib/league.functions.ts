@@ -141,6 +141,22 @@ export const activateNextRound = createServerFn({ method: "POST" })
       if ((count ?? 0) > 0) throw new Error(`מחזור ${r.number} עדיין לא הסתיים — כל המשחקים חייבים להסתיים`);
       await supabaseAdmin.from("rounds").update({ status: "completed" }).eq("id", r.id);
     }
+    // Return loaned players whose loan has ended
+    const { data: done } = await supabaseAdmin.from("rounds").select("number").eq("status", "completed").order("number", { ascending: false }).limit(1).maybeSingle();
+    if (done) {
+      const { data: loans } = await supabaseAdmin.from("players").select("id, loan_from_team_id, team_id").not("loan_from_team_id", "is", null).lte("loan_until_round", done.number);
+      for (const l of loans ?? []) {
+        await supabaseAdmin.from("players").update({ team_id: l.loan_from_team_id, loan_from_team_id: null, loan_until_round: null }).eq("id", l.id);
+        if (l.team_id) {
+          const { data: t } = await supabaseAdmin.from("teams").select("lineup, bench").eq("id", l.team_id).single();
+          if (t) {
+            const lineup = Object.fromEntries(Object.entries((t.lineup ?? {}) as Record<string, string>).filter(([, v]) => v !== l.id));
+            const bench = ((t.bench ?? []) as string[]).filter((x) => x !== l.id);
+            await supabaseAdmin.from("teams").update({ lineup, bench }).eq("id", l.team_id);
+          }
+        }
+      }
+    }
     const { data: next } = await supabaseAdmin.from("rounds").select("id, number").eq("status", "pending").order("number").limit(1).maybeSingle();
     if (!next) throw new Error("אין מחזור הבא — צור מחזור חדש");
     const { count: mc } = await supabaseAdmin.from("matches").select("id", { count: "exact", head: true }).eq("round_id", next.id);

@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      league_settings: {
+        Row: {
+          id: number
+          training_cost_per_point: number
+          transfer_window_open: boolean
+        }
+        Insert: {
+          id?: number
+          training_cost_per_point?: number
+          transfer_window_open?: boolean
+        }
+        Update: {
+          id?: number
+          training_cost_per_point?: number
+          transfer_window_open?: boolean
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           away_ready: boolean
@@ -152,6 +170,8 @@ export type Database = {
           detailed_position: string
           goals: number
           id: string
+          loan_from_team_id: string | null
+          loan_until_round: number | null
           name: string
           position: Database["public"]["Enums"]["player_position"]
           rating: number
@@ -169,6 +189,8 @@ export type Database = {
           detailed_position?: string
           goals?: number
           id?: string
+          loan_from_team_id?: string | null
+          loan_until_round?: number | null
           name: string
           position: Database["public"]["Enums"]["player_position"]
           rating?: number
@@ -186,6 +208,8 @@ export type Database = {
           detailed_position?: string
           goals?: number
           id?: string
+          loan_from_team_id?: string | null
+          loan_until_round?: number | null
           name?: string
           position?: Database["public"]["Enums"]["player_position"]
           rating?: number
@@ -196,6 +220,13 @@ export type Database = {
           yellow_cards?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "players_loan_from_team_id_fkey"
+            columns: ["loan_from_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "players_team_id_fkey"
             columns: ["team_id"]
@@ -304,6 +335,8 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          kind: string
+          loan_rounds: number | null
           player_id: string
           seller_team_id: string
           status: string
@@ -314,6 +347,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          kind?: string
+          loan_rounds?: number | null
           player_id: string
           seller_team_id: string
           status?: string
@@ -324,6 +359,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          kind?: string
+          loan_rounds?: number | null
           player_id?: string
           seller_team_id?: string
           status?: string
@@ -398,6 +435,10 @@ export type Database = {
       }
       set_transfer_listing: {
         Args: { _listed: boolean; _player_id: string; _price: number }
+        Returns: undefined
+      }
+      train_player: {
+        Args: { _player_id: string; _points: number }
         Returns: undefined
       }
     }
