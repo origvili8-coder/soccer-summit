@@ -282,7 +282,6 @@ function MatchCenter() {
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-primary transition-all" style={{ width: `${(minute / 90) * 100}%` }} />
             </div>
-          </div>
             {live && mySide && extra.xi && (
               <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-secondary/60 p-3 text-sm" dir="rtl">
                 <b>🔄 חילוף ({extra.subs?.[mySide] ?? 0}/3)</b>
