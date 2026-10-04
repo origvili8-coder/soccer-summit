@@ -5,7 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import { MATCH_DURATION_MS, useMatches, useMe, usePlayers, useRounds, useTeams } from "@/lib/data";
-import { setReady, adminPlayMatch } from "@/lib/league.functions";
+import { setReady, adminPlayMatch, makeSubstitution } from "@/lib/league.functions";
+import { formationSlots } from "@/lib/formations";
 import { PlayerAvatar, TeamLogo } from "@/components/PlayerAvatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,10 @@ function MatchCenter() {
   const qc = useQueryClient();
   const ready = useServerFn(setReady);
   const force = useServerFn(adminPlayMatch);
+  const subFn = useServerFn(makeSubstitution);
+  const [replayStart, setReplayStart] = useState<number | null>(null);
+  const [subOut, setSubOut] = useState("");
+  const [subIn, setSubIn] = useState("");
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -50,7 +55,9 @@ function MatchCenter() {
   const round = rounds.data?.find((r) => r.id === m?.round_id);
   const pmap = useMemo(() => new Map((players.data ?? []).map((p) => [p.id, p])), [players.data]);
 
-  const elapsed = m?.started_at ? now - new Date(m.started_at).getTime() : 0;
+  const startMs = replayStart ?? (m?.started_at ? new Date(m.started_at).getTime() : 0);
+  const elapsed = startMs ? now - startMs : 0;
+  const isReplay = replayStart !== null && elapsed < MATCH_DURATION_MS;
   const minute = m?.status === "finished" ? Math.min(90, Math.floor((elapsed / MATCH_DURATION_MS) * 90)) : 0;
   const isLive = m?.status === "finished" && elapsed < MATCH_DURATION_MS;
   const shown = (m?.events ?? []).filter((e) => !isLive || e.minute <= minute);
@@ -123,6 +130,45 @@ function MatchCenter() {
   }
   if (!isLive) { bx = 50; by = 50; }
 
+  type XI = { id: string; pos: string }[];
+  const extra = st as unknown as { xi?: { home: XI; away: XI }; bench?: { home: string[]; away: string[] }; subs?: { home: number; away: number } };
+  const pitchNow = (side: "home" | "away", evs: MatchEvent[]) => {
+    let xi = [...(extra.xi?.[side] ?? [])];
+    for (const e of evs) {
+      if (e.side !== side) continue;
+      if (e.type === "red") xi = xi.filter((x) => x.id !== e.playerId);
+      if (e.type === "sub") xi = xi.map((x) => (x.id === e.outId ? { id: e.playerId!, pos: x.pos } : x));
+    }
+    return xi;
+  };
+  const tokens = (["home", "away"] as const).flatMap((side) => {
+    const team = side === "home" ? home : away;
+    const slots = formationSlots(team.formation);
+    const full = extra.xi?.[side] ?? [];
+    return pitchNow(side, shown).map((x) => {
+      const idx = full.findIndex((f) => f.pos === x.pos && (f.id === x.id || !pitchNow(side, shown).some((o) => o.id === f.id)));
+      const sl = slots[Math.max(0, idx)] ?? { x: 50, y: 50 };
+      const drift = isLive ? (bx - 50) * 0.25 + Math.sin(t * 1.3 + sl.x) * 1.5 : 0;
+      const depth = sl.y * 0.46;
+      const left = side === "home" ? 3 + depth + drift : 97 - depth + drift;
+      const top = 8 + sl.x * 0.84 + (isLive ? Math.cos(t + sl.y) * 1.5 : 0);
+      return { id: x.id, side, left, top, color: team.color };
+    });
+  });
+  const live = isLive && !isReplay;
+  const benchAvail = mySide && extra.bench ? extra.bench[mySide].filter((id) => !(m.events ?? []).some((e) => e.type === "sub" && e.playerId === id)) : [];
+  const onNow = mySide ? pitchNow(mySide, shown) : [];
+  async function doSub() {
+    if (!subOut || !subIn) return toast.error("בחר שחקן יוצא ונכנס");
+    setBusy(true);
+    try {
+      await subFn({ data: { matchId, outId: subOut, inId: subIn } });
+      toast.success("החילוף בוצע!");
+      setSubOut(""); setSubIn("");
+      qc.invalidateQueries();
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
   return (
     <div>
       <Link to="/fixtures" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -140,8 +186,11 @@ function MatchCenter() {
               <p className="flex gap-3 text-6xl font-black tabular"><span>{score[0]}</span><span>:</span><span>{score[1]}</span></p>
             )}
             <p className={cn("mt-1 text-sm font-bold", isLive ? "text-destructive" : "text-muted-foreground")}>
-              {m.status === "scheduled" ? `מחזור ${round?.number ?? ""}` : isLive ? `● LIVE ${minute}'` : "סיום · 90'"}
+              {m.status === "scheduled" ? `מחזור ${round?.number ?? ""}` : isReplay ? `⟲ שידור חוזר ${minute}'` : isLive ? `● LIVE ${minute}'` : "סיום · 90'"}
             </p>
+            {m.status === "finished" && !isLive && (
+              <Button size="sm" variant="secondary" className="mt-2" onClick={() => { lastCount.current = 0; setReplayStart(Date.now()); }}>▶ צפה בשידור חוזר</Button>
+            )}
           </div>
           <TeamSide name={away.name} logo={away.logo_url} color={away.color} label="חוץ" />
         </div>
@@ -185,7 +234,8 @@ function MatchCenter() {
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           {/* Pitch */}
           <div className="glass relative overflow-hidden p-3">
-            <div className="relative aspect-[16/10] overflow-hidden rounded-lg pitch-bg" dir="ltr">
+            <div style={{ perspective: "1100px" }}>
+            <div className="relative aspect-[16/10] rounded-lg pitch-bg shadow-2xl" dir="ltr" style={{ transform: "rotateX(38deg) scale(0.92)", transformOrigin: "50% 60%", transformStyle: "preserve-3d" }}>
               <div className="absolute inset-3 rounded-sm border-2 border-pitch-line" />
               <div className="absolute inset-y-3 left-1/2 w-0.5 bg-pitch-line" />
               <div className="absolute left-1/2 top-1/2 size-[18%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-pitch-line" style={{ aspectRatio: 1, height: "auto" }} />
@@ -195,6 +245,20 @@ function MatchCenter() {
               <div className="absolute right-3 top-1/2 h-[20%] w-[5%] -translate-y-1/2 border-2 border-r-0 border-pitch-line" />
               <div className="absolute left-2 top-2 rounded bg-background/60 px-2 py-0.5 text-xs font-bold">{home.name} ←</div>
               <div className="absolute right-2 top-2 rounded bg-background/60 px-2 py-0.5 text-xs font-bold">→ {away.name}</div>
+              {tokens.map((tk) => {
+                const pl = pmap.get(tk.id);
+                return (
+                  <div key={tk.side + tk.id} className="absolute -translate-x-1/2 -translate-y-full transition-all duration-700 ease-out" style={{ left: `${tk.left}%`, top: `${tk.top}%`, transform: "translate(-50%,-100%) rotateX(-38deg)", transformOrigin: "50% 100%" }}>
+                    <div className="flex flex-col items-center">
+                      <div className="rounded-full border-2 shadow-lg" style={{ borderColor: tk.color }}>
+                        <PlayerAvatar src={pl?.avatar_url} name={pl?.name ?? ""} className="size-7" />
+                      </div>
+                      <span className="mt-0.5 max-w-16 truncate rounded bg-background/70 px-1 text-[8px] font-bold">{pl?.name.split(" ").slice(-1)[0]}</span>
+                      <div className="h-1 w-5 rounded-full bg-background/50 blur-[1px]" />
+                    </div>
+                  </div>
+                );
+              })}
               <div
                 className="absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-[0_0_14px_4px] shadow-foreground/40 transition-all duration-500 ease-out"
                 style={{ left: `${bx}%`, top: `${by}%` }}
@@ -214,9 +278,25 @@ function MatchCenter() {
                 </div>
               )}
             </div>
+            </div>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-primary transition-all" style={{ width: `${(minute / 90) * 100}%` }} />
             </div>
+          </div>
+            {live && mySide && extra.xi && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-secondary/60 p-3 text-sm" dir="rtl">
+                <b>🔄 חילוף ({extra.subs?.[mySide] ?? 0}/3)</b>
+                <select value={subOut} onChange={(e) => setSubOut(e.target.value)} className="rounded bg-background px-2 py-1">
+                  <option value="">יוצא...</option>
+                  {onNow.map((x) => <option key={x.id} value={x.id}>{pmap.get(x.id)?.name} ({x.pos})</option>)}
+                </select>
+                <select value={subIn} onChange={(e) => setSubIn(e.target.value)} className="rounded bg-background px-2 py-1">
+                  <option value="">נכנס...</option>
+                  {benchAvail.map((id) => <option key={id} value={id}>{pmap.get(id)?.name} ({pmap.get(id)?.detailed_position})</option>)}
+                </select>
+                <Button size="sm" disabled={busy || (extra.subs?.[mySide] ?? 0) >= 3} onClick={doSub}>בצע חילוף</Button>
+              </div>
+            )}
           </div>
           {/* Feed */}
           <div className="glass flex max-h-[560px] flex-col p-4">
