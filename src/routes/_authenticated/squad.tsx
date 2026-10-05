@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar, PosBadge } from "@/components/PlayerAvatar";
-import { useMe, usePlayers, useSettings, useTeams, type Player } from "@/lib/data";
-import { FORMATIONS, formationSlots, formatMoney, DETAIL_LABEL, type Detail } from "@/lib/formations";
+import { useMe, usePlayers, useTeams, type Player } from "@/lib/data";
+import { FORMATIONS, formationSlots, formatMoney, POS_LABEL } from "@/lib/formations";
 
 export const Route = createFileRoute("/_authenticated/squad")({
   head: () => ({
@@ -30,15 +30,12 @@ function SquadPage() {
   const [formation, setFormation] = useState("4-3-3");
   const [lineup, setLineup] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<string | null>(null);
-  const [bench, setBench] = useState<string[]>([]);
-  const { data: settings } = useSettings();
 
   useEffect(() => {
     if (!team) return;
     setFormation(team.formation);
     setLineup((team.lineup ?? {}) as Record<string, string>);
-    setBench((team.bench ?? []) as string[]);
-  }, [team?.id, team?.formation, JSON.stringify(team?.lineup), JSON.stringify(team?.bench)]);
+  }, [team?.id, team?.formation, JSON.stringify(team?.lineup)]);
 
   if (!team) return <Empty>לא שויכה לך קבוצה. פנה למנהל הליגה.</Empty>;
 
@@ -52,32 +49,15 @@ function SquadPage() {
     const next = Object.fromEntries(Object.entries(lineup).filter(([, v]) => v !== pid));
     next[String(slot)] = pid;
     setLineup(next);
-    setBench((b) => b.filter((x) => x !== pid));
     setSelected(null);
   };
 
   const save = async () => {
     const clean = Object.fromEntries(Object.entries(lineup).filter(([k]) => Number(k) < slots.length));
-    const { error } = await supabase.rpc("save_lineup_v2", { _formation: formation, _lineup: clean, _bench: bench.filter((x) => !Object.values(clean).includes(x)) });
+    const { error } = await supabase.rpc("save_lineup", { _formation: formation, _lineup: clean });
     if (error) return toast.error(error.message);
     toast.success("ההרכב נשמר");
     qc.invalidateQueries({ queryKey: ["teams"] });
-  };
-
-  const toggleBench = (p: Player) => {
-    if (inXI.has(p.id)) return toast.error("השחקן כבר בהרכב");
-    if (p.suspended_matches > 0) return toast.error("שחקן מושעה");
-    if (!bench.includes(p.id) && bench.length >= 5) return toast.error("ספסל מקסימום 5 שחקנים");
-    setBench((b) => (b.includes(p.id) ? b.filter((x) => x !== p.id) : [...b, p.id]));
-  };
-  const train = async (p: Player) => {
-    const cost = settings?.training_cost_per_point ?? 0;
-    const v = prompt(`אימון ל${p.name} (רייטינג ${p.rating}). כמה נקודות? כל נקודה עולה ${formatMoney(cost)}`, "1");
-    if (!v) return;
-    const { error } = await supabase.rpc("train_player", { _player_id: p.id, _points: parseInt(v, 10) || 1 });
-    if (error) return toast.error(error.message);
-    toast.success("האימון הושלם! הרייטינג עלה");
-    qc.invalidateQueries();
   };
 
   const toggleList = async (p: Player) => {
@@ -120,15 +100,15 @@ function SquadPage() {
                 style={{ left: `${s.x}%`, bottom: `${s.y}%` }}
               >
                 {p ? <PlayerAvatar src={p.avatar_url} name={p.name} className="size-12 border-2 border-neon" /> : (
-                  <div className="flex size-12 items-center justify-center rounded-full border-2 border-dashed border-foreground/40 text-[10px] font-bold">{s.pos}</div>
+                  <div className="flex size-12 items-center justify-center rounded-full border-2 border-dashed border-foreground/40 text-[10px] font-bold">{s.role}</div>
                 )}
-                <span className="max-w-full truncate rounded bg-background/70 px-1.5 text-[11px] font-bold">{p?.name ?? DETAIL_LABEL[s.pos as Detail]}</span>
+                <span className="max-w-full truncate rounded bg-background/70 px-1.5 text-[11px] font-bold">{p?.name ?? POS_LABEL[s.role]}</span>
               </button>
             );
           })}
         </div>
         <div className="glass max-h-[70vh] space-y-1 overflow-y-auto p-3">
-          <p className="mb-2 text-xs text-muted-foreground">גרור שחקן לעמדה, או לחץ עליו ואז על עמדה במגרש. ספסל: {bench.length}/5 · תקציב: {formatMoney(team.budget)} · אימון: {formatMoney(settings?.training_cost_per_point ?? 0)} לנקודה</p>
+          <p className="mb-2 text-xs text-muted-foreground">גרור שחקן לעמדה, או לחץ עליו ואז על עמדה במגרש.</p>
           {squad.length === 0 && <p className="text-sm text-muted-foreground">אין שחקנים בסגל.</p>}
           {squad.map((p) => (
             <div
@@ -142,15 +122,10 @@ function SquadPage() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-bold">{p.name} {inXI.has(p.id) && <span className="text-neon">●</span>}</div>
                 <div className="flex gap-2 text-[11px] text-muted-foreground tabular">
-                  <PosBadge pos={p.position} /> {p.detailed_position} · {p.rating} · ⚽{p.goals} · 🅰{p.assists} · 🟨{p.yellow_cards} · 🟥{p.red_cards}
+                  <PosBadge pos={p.position} /> {p.rating} · ⚽{p.goals} · 🅰{p.assists} · 🟨{p.yellow_cards} · 🟥{p.red_cards}
                   {p.suspended_matches > 0 && <span className="text-destructive">מושעה</span>}
-                  {p.loan_from_team_id && <span className="text-cyan">בהשאלה</span>}
                 </div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); toggleBench(p); }} className={`rounded px-2 py-1 text-[11px] font-bold ${bench.includes(p.id) ? "bg-cyan/25 text-cyan" : "bg-secondary"}`}>
-                {bench.includes(p.id) ? `ספסל ${bench.indexOf(p.id) + 1}` : "ספסל"}
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); train(p); }} className="rounded bg-neon/15 px-2 py-1 text-[11px] font-bold text-neon">אימון</button>
               <button
                 onClick={(e) => { e.stopPropagation(); toggleList(p); }}
                 className={`rounded px-2 py-1 text-[11px] font-bold ${p.transfer_listed ? "bg-gold/20 text-gold" : "bg-secondary"}`}

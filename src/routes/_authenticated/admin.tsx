@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar, PosBadge, TeamLogo } from "@/components/PlayerAvatar";
-import { fileToDataUrl, useSettings, useMatches, useMe, usePlayers, useProfiles, useRounds, useTeams, type Player, type Team } from "@/lib/data";
-import { DETAILED, DETAIL_GROUP, DETAIL_LABEL, formatMoney, type Detail } from "@/lib/formations";
+import { fileToDataUrl, useMatches, useMe, usePlayers, useProfiles, useRounds, useTeams, type Player, type Team } from "@/lib/data";
+import { formatMoney } from "@/lib/formations";
 import { activateNextRound, adminPlayMatch, createManager, deleteManager, updateManager } from "@/lib/league.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -44,9 +44,9 @@ function useRun() {
 
 function AdminPage() {
   const { data: me } = useMe();
-  const [tab, setTab] = useState<"teams" | "players" | "managers" | "rounds" | "settings">("teams");
+  const [tab, setTab] = useState<"teams" | "players" | "managers" | "rounds">("teams");
   if (me && !me.isAdmin) return <Empty>רק מנהל הליגה יכול לגשת למסך זה.</Empty>;
-  const tabs = { teams: "קבוצות", players: "שחקנים", managers: "מנג'רים", rounds: "מחזורים", settings: "אימונים וחלון העברות" } as const;
+  const tabs = { teams: "קבוצות", players: "שחקנים", managers: "מנג'רים", rounds: "מחזורים" } as const;
   return (
     <div>
       <PageHeader kicker="ADMIN CONTROL" title="פאנל ניהול" />
@@ -59,7 +59,6 @@ function AdminPage() {
       {tab === "players" && <PlayersAdmin />}
       {tab === "managers" && <ManagersAdmin />}
       {tab === "rounds" && <RoundsAdmin />}
-      {tab === "settings" && <SettingsAdmin />}
     </div>
   );
 }
@@ -106,12 +105,12 @@ function PlayersAdmin() {
   const { data: players = [] } = usePlayers();
   const run = useRun();
   const [filter, setFilter] = useState("");
-  const blank = { name: "", detailed_position: "CM" as Detail, rating: 70, team_id: "", avatar_url: "" };
+  const blank = { name: "", position: "MID" as Player["position"], rating: 70, team_id: "", avatar_url: "" };
   const [f, setF] = useState(blank);
   const save = async () => {
     if (!f.name) return;
-    if (await run(() => supabase.from("players").insert({ ...f, position: DETAIL_GROUP[f.detailed_position], team_id: f.team_id || null, avatar_url: f.avatar_url || null }), "השחקן נוסף"))
-      setF({ ...blank, team_id: f.team_id, detailed_position: f.detailed_position });
+    if (await run(() => supabase.from("players").insert({ ...f, team_id: f.team_id || null, avatar_url: f.avatar_url || null }), "השחקן נוסף"))
+      setF({ ...blank, team_id: f.team_id, position: f.position });
   };
   const upd = (p: Player, patch: Partial<Player>) => run(() => supabase.from("players").update(patch).eq("id", p.id));
   const shown = players.filter((p) => !filter || p.team_id === filter || (filter === "free" && !p.team_id));
@@ -119,8 +118,8 @@ function PlayersAdmin() {
     <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
       <Card title="שחקן חדש">
         <input className={inp + " w-full"} placeholder="שם השחקן" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <select className={inp + " w-full"} value={f.detailed_position} onChange={(e) => setF({ ...f, detailed_position: e.target.value as Detail })}>
-          {DETAILED.map((d) => <option key={d} value={d}>{d} — {DETAIL_LABEL[d]}</option>)}
+        <select className={inp + " w-full"} value={f.position} onChange={(e) => setF({ ...f, position: e.target.value as Player["position"] })}>
+          <option value="GK">שוער</option><option value="DEF">הגנה</option><option value="MID">קישור</option><option value="FWD">התקפה</option>
         </select>
         <label className="block text-sm">רייטינג<input type="number" min={1} max={99} className={inp + " w-full"} value={f.rating} onChange={(e) => setF({ ...f, rating: +e.target.value })} /></label>
         <select className={inp + " w-full"} value={f.team_id} onChange={(e) => setF({ ...f, team_id: e.target.value })}>
@@ -143,9 +142,6 @@ function PlayersAdmin() {
               </label>
               <b className="min-w-24 flex-1">{p.name}</b>
               <PosBadge pos={p.position} />
-              <select className={inp} value={p.detailed_position} onChange={(e) => upd(p, { detailed_position: e.target.value, position: DETAIL_GROUP[e.target.value as Detail] })}>
-                {DETAILED.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
               <input type="number" defaultValue={p.rating} className={inp + " w-16"} onBlur={(e) => +e.target.value !== p.rating && upd(p, { rating: +e.target.value })} />
               <select className={inp} value={p.team_id ?? ""} onChange={(e) => upd(p, { team_id: e.target.value || null })}>
                 <option value="">חופשי</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.short_name}</option>)}
@@ -245,32 +241,6 @@ function RoundsAdmin() {
           {r.status === "pending" && <button className="text-xs text-destructive" onClick={() => run(() => supabase.from("rounds").delete().eq("id", r.id))}>מחק מחזור</button>}
         </Card>
       ))}
-    </div>
-  );
-}
-
-function SettingsAdmin() {
-  const { data: st } = useSettings();
-  const run = useRun();
-  const [cost, setCost] = useState<string>("");
-  if (!st) return null;
-  const upd = (patch: Partial<typeof st>, ok: string) => run(() => supabase.from("league_settings").update(patch).eq("id", 1), ok);
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="חלון העברות">
-        <p className="text-sm">מצב: <b className={st.transfer_window_open ? "text-neon" : "text-destructive"}>{st.transfer_window_open ? "פתוח" : "סגור"}</b></p>
-        <p className="text-xs text-muted-foreground">כשהחלון סגור אי אפשר לשלוח או לאשר הצעות קנייה והשאלה.</p>
-        <button className={btn} onClick={() => upd({ transfer_window_open: !st.transfer_window_open }, st.transfer_window_open ? "החלון נסגר" : "החלון נפתח")}>
-          {st.transfer_window_open ? "סגור חלון העברות" : "פתח חלון העברות"}
-        </button>
-      </Card>
-      <Card title="מחיר אימון">
-        <p className="text-sm">כרגע: <b className="text-neon">{formatMoney(st.training_cost_per_point)}</b> לכל נקודת רייטינג</p>
-        <div className="flex gap-2">
-          <input type="number" className={inp + " flex-1"} placeholder="מחיר חדש (₪)" value={cost} onChange={(e) => setCost(e.target.value)} />
-          <button className={btn} disabled={!cost} onClick={async () => { if (await upd({ training_cost_per_point: Math.max(0, parseInt(cost, 10) || 0) }, "המחיר עודכן")) setCost(""); }}>שמור</button>
-        </div>
-      </Card>
     </div>
   );
 }

@@ -14,10 +14,6 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Offer = Database["public"]["Tables"]["transfer_offers"]["Row"];
 export type Message = Database["public"]["Tables"]["messages"]["Row"];
 
-export type News = Database["public"]["Tables"]["news"]["Row"];
-export const useNews = () =>
-  useQuery({ queryKey: ["news"], queryFn: () => q<News[]>(supabase.from("news").select("*").order("created_at", { ascending: false }).limit(50)) });
-
 export const MATCH_DURATION_MS = 90_000;
 
 async function q<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -113,7 +109,3 @@ export async function fileToDataUrl(file: File, size = 160): Promise<string> {
   ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
   return c.toDataURL("image/jpeg", 0.85);
 }
-
-export type Settings = Database["public"]["Tables"]["league_settings"]["Row"];
-export const useSettings = () =>
-  useQuery({ queryKey: ["settings"], queryFn: () => q<Settings>(supabase.from("league_settings").select("*").eq("id", 1).single()) });

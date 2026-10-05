@@ -101,7 +101,7 @@ function Dashboard() {
                     );
                   })}
                   <span className="order-2 text-2xl font-black tabular">
-                    {matchPhase(nextMatch) === "scheduled" ? "VS" : <span className="inline-flex gap-1"><span>{nextMatch.home_score}</span><span>-</span><span>{nextMatch.away_score}</span></span>}
+                    {matchPhase(nextMatch) === "scheduled" ? "VS" : `${nextMatch.home_score}-${nextMatch.away_score}`}
                   </span>
                 </div>
                 <div className="mt-4 rounded-lg bg-primary py-2 text-center text-sm font-bold text-primary-foreground">למרכז המשחק</div>

@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PageHeader, Empty } from "@/components/PageHeader";
 import { PlayerAvatar, PosBadge, TeamLogo } from "@/components/PlayerAvatar";
-import { useMe, usePlayers, useProfiles, useSettings, useTeams, type Player } from "@/lib/data";
+import { useMe, usePlayers, useProfiles, useTeams, type Player } from "@/lib/data";
 import { formatMoney } from "@/lib/formations";
 import { sendOffer } from "@/lib/offers";
 
@@ -37,20 +37,13 @@ function TransfersPage() {
     (p) => p.team_id && p.team_id !== myTeam && (all || p.transfer_listed) && (!pos || p.position === pos) && p.name.includes(q),
   ).sort((a, b) => b.rating - a.rating);
 
-  const { data: settings } = useSettings();
-  const offer = async (p: Player, loan = false) => {
+  const offer = async (p: Player) => {
     if (!myTeam || !me) return toast.error("אין לך קבוצה");
-    let loanRounds: number | undefined;
-    if (loan) {
-      const r = prompt(`השאלת ${p.name} — לכמה מחזורים?`, "3");
-      if (!r) return;
-      loanRounds = Math.max(1, parseInt(r, 10) || 1);
-    }
-    const v = prompt(loan ? `דמי השאלה עבור ${p.name} (₪)` : `הצעה עבור ${p.name} (₪)`, String(loan ? 300_000 : p.asking_price || 1_000_000));
+    const v = prompt(`הצעה עבור ${p.name} (₪)`, String(p.asking_price || 1_000_000));
     if (!v) return;
     try {
       const seller = profiles.find((x) => x.team_id === p.team_id);
-      await sendOffer(p, myTeam, me.userId, seller?.id, parseInt(v, 10) || 0, loanRounds);
+      await sendOffer(p, myTeam, me.userId, seller?.id, parseInt(v, 10) || 0);
       toast.success("ההצעה נשלחה");
       qc.invalidateQueries();
       if (seller) nav({ to: "/chat" });
@@ -60,7 +53,6 @@ function TransfersPage() {
   return (
     <div>
       <PageHeader kicker="TRANSFER HUB" title="שוק העברות" actions={myTeam && <span className="glass rounded-lg px-3 py-2 text-sm tabular">תקציב: <b className="text-neon">{formatMoney(teamName(myTeam)?.budget ?? 0)}</b></span>} />
-      {settings && !settings.transfer_window_open && <div className="glass mb-4 border border-destructive/50 p-3 text-sm font-bold text-destructive">🔒 חלון ההעברות סגור כרגע — לא ניתן לשלוח הצעות.</div>}
       <div className="mb-4 flex flex-wrap gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="חיפוש שחקן" className="glass rounded-lg px-3 py-2 text-sm" />
         <select value={pos} onChange={(e) => setPos(e.target.value)} className="glass rounded-lg px-3 py-2 text-sm">
@@ -83,13 +75,7 @@ function TransfersPage() {
                   </div>
                   {p.transfer_listed && <div className="text-xs text-gold tabular">{formatMoney(p.asking_price)}</div>}
                 </div>
-                {myTeam && !p.loan_from_team_id && settings?.transfer_window_open !== false && (
-                  <div className="flex flex-col gap-1">
-                    <button onClick={() => offer(p)} className="rounded-lg bg-neon px-3 py-1.5 text-xs font-bold text-background">הצעת קנייה</button>
-                    <button onClick={() => offer(p, true)} className="rounded-lg bg-cyan/20 px-3 py-1.5 text-xs font-bold text-cyan">הצעת השאלה</button>
-                  </div>
-                )}
-                {p.loan_from_team_id && <span className="text-[11px] text-cyan">בהשאלה</span>}
+                {myTeam && <button onClick={() => offer(p)} className="rounded-lg bg-neon px-3 py-1.5 text-xs font-bold text-background">הגש הצעה</button>}
               </div>
             );
           })}

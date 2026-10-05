@@ -96,7 +96,7 @@ function Fixtures() {
                     ) : (
                       <div>
                         <p className="text-2xl font-black tabular" dir="ltr">
-                          {phase === "live" ? "•" : <span className="inline-flex gap-1"><span>{m.home_score}</span><span>-</span><span>{m.away_score}</span></span>}
+                          {phase === "live" ? "•" : `${m.home_score} - ${m.away_score}`}
                         </p>
                         <p className={cn("text-[10px] font-bold", phase === "live" ? "text-destructive" : "text-muted-foreground")}>
                           {phase === "live" ? "LIVE" : "סיום"}

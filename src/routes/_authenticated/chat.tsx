@@ -8,8 +8,6 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useMe, useMessages, useOffers, usePlayers, useProfiles, useTeams, type Offer } from "@/lib/data";
 import { formatMoney } from "@/lib/formations";
 import { sendOffer } from "@/lib/offers";
-import { useServerFn } from "@tanstack/react-start";
-import { announceTransfer } from "@/lib/league.functions";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({
@@ -31,7 +29,6 @@ function ChatPage() {
   const { data: players = [] } = usePlayers();
   const { data: teams = [] } = useTeams();
   const qc = useQueryClient();
-  const announce = useServerFn(announceTransfer);
   const [peer, setPeer] = useState<string | null>(null);
   const [text, setText] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -53,7 +50,6 @@ function ChatPage() {
     const { error } = accept ? await supabase.rpc("accept_offer", { _offer_id: o.id }) : await supabase.rpc("cancel_or_reject_offer", { _offer_id: o.id });
     if (error) return toast.error(error.message);
     toast.success(accept ? "העסקה בוצעה!" : "ההצעה נדחתה");
-    if (accept) announce({ data: { offerId: o.id } }).catch(() => {});
     qc.invalidateQueries();
   };
 
@@ -100,7 +96,7 @@ function ChatPage() {
                     <div className={`pop-in max-w-[75%] rounded-xl p-3 text-sm ${mine ? "bg-neon/15" : "bg-secondary"}`}>
                       {o ? (
                         <div className="space-y-2">
-                          <div className="text-xs font-bold text-gold">{o.kind === "loan" ? `הצעת השאלה · ${o.loan_rounds} מחזורים` : "הצעת העברה"}</div>
+                          <div className="text-xs font-bold text-gold">הצעת העברה</div>
                           <div className="flex items-center gap-2">
                             <PlayerAvatar src={pl?.avatar_url} name={pl?.name ?? "?"} />
                             <div><b>{pl?.name}</b><div className="tabular text-neon">{formatMoney(o.amount)}</div></div>

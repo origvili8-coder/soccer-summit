@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, LayoutDashboard, Newspaper, LogOut, MessagesSquare, Repeat, Shield, Shirt } from "lucide-react";
+import { CalendarDays, LayoutDashboard, LogOut, MessagesSquare, Repeat, Shield, Shirt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe, useTeams } from "@/lib/data";
 import { formatMoney } from "@/lib/formations";
@@ -23,7 +23,6 @@ const NAV = [
   { to: "/squad", label: "סגל וטקטיקה", icon: Shirt },
   { to: "/transfers", label: "שוק העברות", icon: Repeat },
   { to: "/chat", label: "צ'אט ומשא ומתן", icon: MessagesSquare },
-  { to: "/news", label: "חדשות", icon: Newspaper },
 ] as const;
 
 function AppShell() {
@@ -45,9 +44,6 @@ function AppShell() {
         qc.invalidateQueries({ queryKey: ["offers"] });
         qc.invalidateQueries({ queryKey: ["players"] });
         qc.invalidateQueries({ queryKey: ["teams"] });
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "news" }, () => {
-        qc.invalidateQueries({ queryKey: ["news"] });
       })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
         qc.invalidateQueries({ queryKey: ["messages"] });
