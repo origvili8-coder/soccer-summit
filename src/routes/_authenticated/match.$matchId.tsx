@@ -233,9 +233,31 @@ function MatchCenter() {
       ) : (
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           {/* Pitch */}
-          <div className="glass relative overflow-hidden p-3">
-            <div style={{ perspective: "1100px" }}>
-            <div className="relative aspect-[16/10] rounded-lg pitch-bg shadow-2xl" dir="ltr" style={{ transform: "rotateX(38deg) scale(0.92)", transformOrigin: "50% 60%", transformStyle: "preserve-3d" }}>
+          <div className="glass relative overflow-hidden p-0">
+            {/* Broadcast scoreboard */}
+            <div className="relative z-10 flex items-center justify-center gap-2 bg-background/90 px-3 py-1.5" dir="ltr">
+              <span className="rounded bg-foreground px-2 py-0.5 text-sm font-black text-background tabular">{String(minute).padStart(2, "0")}'</span>
+              <div className="flex items-center gap-3 rounded bg-card px-4 py-1 text-sm font-bold">
+                <span className="truncate">{home.name}</span>
+                <span className="size-3 rounded-full" style={{ background: home.color }} />
+                <span className="text-lg font-black tabular">{score[0]} : {score[1]}</span>
+                <span className="size-3 rounded-full" style={{ background: away.color }} />
+                <span className="truncate">{away.name}</span>
+              </div>
+            </div>
+            <div style={{ perspective: "900px" }} className="overflow-hidden">
+            <div
+              className="relative aspect-[16/10] shadow-2xl"
+              dir="ltr"
+              style={{
+                transform: "rotateX(48deg) scale(1.25)",
+                transformOrigin: "50% 70%",
+                transformStyle: "preserve-3d",
+                background:
+                  "repeating-linear-gradient(90deg, oklch(0.55 0.13 140) 0 6.25%, oklch(0.5 0.12 140) 6.25% 12.5%), oklch(0.52 0.12 140)",
+              }}
+            >
+              <div className="absolute inset-0 opacity-30" style={{ background: "repeating-linear-gradient(135deg, transparent 0 40px, oklch(0.4 0.1 140 / .5) 40px 80px)" }} />
               <div className="absolute inset-3 rounded-sm border-2 border-pitch-line" />
               <div className="absolute inset-y-3 left-1/2 w-0.5 bg-pitch-line" />
               <div className="absolute left-1/2 top-1/2 size-[18%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-pitch-line" style={{ aspectRatio: 1, height: "auto" }} />
@@ -243,18 +265,16 @@ function MatchCenter() {
               <div className="absolute right-3 top-1/2 h-[44%] w-[14%] -translate-y-1/2 border-2 border-r-0 border-pitch-line" />
               <div className="absolute left-3 top-1/2 h-[20%] w-[5%] -translate-y-1/2 border-2 border-l-0 border-pitch-line" />
               <div className="absolute right-3 top-1/2 h-[20%] w-[5%] -translate-y-1/2 border-2 border-r-0 border-pitch-line" />
-              <div className="absolute left-2 top-2 rounded bg-background/60 px-2 py-0.5 text-xs font-bold">{home.name} ←</div>
-              <div className="absolute right-2 top-2 rounded bg-background/60 px-2 py-0.5 text-xs font-bold">→ {away.name}</div>
               {tokens.map((tk) => {
                 const pl = pmap.get(tk.id);
                 return (
-                  <div key={tk.side + tk.id} className="absolute -translate-x-1/2 -translate-y-full transition-all duration-700 ease-out" style={{ left: `${tk.left}%`, top: `${tk.top}%`, transform: "translate(-50%,-100%) rotateX(-38deg)", transformOrigin: "50% 100%" }}>
+                  <div key={tk.side + tk.id} className="absolute transition-all duration-700 ease-out" style={{ left: `${tk.left}%`, top: `${tk.top}%`, transform: "translate(-50%,-100%) rotateX(-48deg)", transformOrigin: "50% 100%" }}>
                     <div className="flex flex-col items-center">
-                      <div className="rounded-full border-2 shadow-lg" style={{ borderColor: tk.color }}>
-                        <PlayerAvatar src={pl?.avatar_url} name={pl?.name ?? ""} className="size-7" />
-                      </div>
-                      <span className="mt-0.5 max-w-16 truncate rounded bg-background/70 px-1 text-[8px] font-bold">{pl?.name.split(" ").slice(-1)[0]}</span>
-                      <div className="h-1 w-5 rounded-full bg-background/50 blur-[1px]" />
+                      <span className="mb-0.5 whitespace-nowrap text-[8px] font-bold text-foreground [text-shadow:0_1px_2px_black]">{pl?.name.split(" ").slice(-1)[0]}</span>
+                      <div className="size-2 rounded-full bg-[oklch(0.75_0.06_60)]" />
+                      <div className="h-3 w-2.5 rounded-sm" style={{ background: tk.color }} />
+                      <div className="flex gap-[2px]"><div className="h-2 w-[3px] bg-foreground/80" /><div className="h-2 w-[3px] bg-foreground/80" /></div>
+                      <div className="h-1 w-4 rounded-full bg-background/50 blur-[1px]" />
                     </div>
                   </div>
                 );
