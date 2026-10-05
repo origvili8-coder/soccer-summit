@@ -280,7 +280,7 @@ function MatchCenter() {
                 );
               })}
               <div
-                className="absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-[0_0_14px_4px] shadow-foreground/40 transition-all duration-500 ease-out"
+                className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-[0_0_6px_2px] shadow-foreground/40 transition-all duration-500 ease-out"
                 style={{ left: `${bx}%`, top: `${by}%` }}
               />
               {popup && (
@@ -299,9 +299,10 @@ function MatchCenter() {
               )}
             </div>
             </div>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-1.5 overflow-hidden bg-muted">
               <div className="h-full bg-primary transition-all" style={{ width: `${(minute / 90) * 100}%` }} />
             </div>
+            {me.data?.isAdmin && !isLive && <ScoreEditor matchId={m.id} h={m.home_score} a={m.away_score} homeName={home.name} awayName={away.name} />}
             {live && mySide && extra.xi && (
               <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-secondary/60 p-3 text-sm" dir="rtl">
                 <b>🔄 חילוף ({extra.subs?.[mySide] ?? 0}/3)</b>
