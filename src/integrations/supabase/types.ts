@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      league_settings: {
-        Row: {
-          id: number
-          training_cost_per_point: number
-          transfer_window_open: boolean
-        }
-        Insert: {
-          id?: number
-          training_cost_per_point?: number
-          transfer_window_open?: boolean
-        }
-        Update: {
-          id?: number
-          training_cost_per_point?: number
-          transfer_window_open?: boolean
-        }
-        Relationships: []
-      }
       matches: {
         Row: {
           away_ready: boolean
@@ -137,41 +119,14 @@ export type Database = {
           },
         ]
       }
-      news: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          title: string
-        }
-        Insert: {
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          title: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          title?: string
-        }
-        Relationships: []
-      }
       players: {
         Row: {
           asking_price: number
           assists: number
           avatar_url: string | null
           created_at: string
-          detailed_position: string
           goals: number
           id: string
-          loan_from_team_id: string | null
-          loan_until_round: number | null
           name: string
           position: Database["public"]["Enums"]["player_position"]
           rating: number
@@ -186,11 +141,8 @@ export type Database = {
           assists?: number
           avatar_url?: string | null
           created_at?: string
-          detailed_position?: string
           goals?: number
           id?: string
-          loan_from_team_id?: string | null
-          loan_until_round?: number | null
           name: string
           position: Database["public"]["Enums"]["player_position"]
           rating?: number
@@ -205,11 +157,8 @@ export type Database = {
           assists?: number
           avatar_url?: string | null
           created_at?: string
-          detailed_position?: string
           goals?: number
           id?: string
-          loan_from_team_id?: string | null
-          loan_until_round?: number | null
           name?: string
           position?: Database["public"]["Enums"]["player_position"]
           rating?: number
@@ -220,13 +169,6 @@ export type Database = {
           yellow_cards?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "players_loan_from_team_id_fkey"
-            columns: ["loan_from_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "players_team_id_fkey"
             columns: ["team_id"]
@@ -291,7 +233,6 @@ export type Database = {
       }
       teams: {
         Row: {
-          bench: Json
           budget: number
           color: string
           created_at: string
@@ -303,7 +244,6 @@ export type Database = {
           short_name: string
         }
         Insert: {
-          bench?: Json
           budget?: number
           color?: string
           created_at?: string
@@ -315,7 +255,6 @@ export type Database = {
           short_name?: string
         }
         Update: {
-          bench?: Json
           budget?: number
           color?: string
           created_at?: string
@@ -335,8 +274,6 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
-          kind: string
-          loan_rounds: number | null
           player_id: string
           seller_team_id: string
           status: string
@@ -347,8 +284,6 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
-          kind?: string
-          loan_rounds?: number | null
           player_id: string
           seller_team_id: string
           status?: string
@@ -359,8 +294,6 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
-          kind?: string
-          loan_rounds?: number | null
           player_id?: string
           seller_team_id?: string
           status?: string
@@ -429,16 +362,8 @@ export type Database = {
         Args: { _formation: string; _lineup: Json }
         Returns: undefined
       }
-      save_lineup_v2: {
-        Args: { _bench: Json; _formation: string; _lineup: Json }
-        Returns: undefined
-      }
       set_transfer_listing: {
         Args: { _listed: boolean; _player_id: string; _price: number }
-        Returns: undefined
-      }
-      train_player: {
-        Args: { _player_id: string; _points: number }
         Returns: undefined
       }
     }
