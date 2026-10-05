@@ -372,3 +372,27 @@ function StatBar({ label, a, b }: { label: string; a: number; b: number }) {
     </div>
   );
 }
+
+function ScoreEditor({ matchId, h, a, homeName, awayName }: { matchId: string; h: number; a: number; homeName: string; awayName: string }) {
+  const qc = useQueryClient();
+  const [hs, setHs] = useState(h);
+  const [as, setAs] = useState(a);
+  async function save() {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("matches").update({ home_score: hs, away_score: as }).eq("id", matchId);
+    if (error) return toast.error(error.message);
+    toast.success("התוצאה עודכנה");
+    qc.invalidateQueries({ queryKey: ["matches"] });
+  }
+  return (
+    <div className="m-3 flex flex-wrap items-center gap-2 rounded-lg bg-secondary/60 p-3 text-sm">
+      <b>✏️ תיקון תוצאה (מנהל):</b>
+      <span>{homeName}</span>
+      <input type="number" min={0} value={hs} onChange={(e) => setHs(+e.target.value)} className="w-14 rounded bg-background px-2 py-1" />
+      <span>-</span>
+      <input type="number" min={0} value={as} onChange={(e) => setAs(+e.target.value)} className="w-14 rounded bg-background px-2 py-1" />
+      <span>{awayName}</span>
+      <Button size="sm" onClick={save}>שמור</Button>
+    </div>
+  );
+}
