@@ -101,7 +101,7 @@ function Dashboard() {
                     );
                   })}
                   <span className="order-2 text-2xl font-black tabular">
-                    {matchPhase(nextMatch) === "scheduled" ? "VS" : `${nextMatch.home_score}-${nextMatch.away_score}`}
+                    {matchPhase(nextMatch) === "scheduled" ? "VS" : `${nextMatch.away_score}-${nextMatch.home_score}`}
                   </span>
                 </div>
                 <div className="mt-4 rounded-lg bg-primary py-2 text-center text-sm font-bold text-primary-foreground">למרכז המשחק</div>

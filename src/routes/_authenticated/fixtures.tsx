@@ -96,7 +96,7 @@ function Fixtures() {
                     ) : (
                       <div>
                         <p className="text-2xl font-black tabular" dir="ltr">
-                          {phase === "live" ? "•" : `${m.home_score} - ${m.away_score}`}
+                          {phase === "live" ? "•" : `${m.away_score} - ${m.home_score}`}
                         </p>
                         <p className={cn("text-[10px] font-bold", phase === "live" ? "text-destructive" : "text-muted-foreground")}>
                           {phase === "live" ? "LIVE" : "סיום"}

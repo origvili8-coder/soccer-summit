@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { formationSlots, type Pos } from "./formations";
 import { simulateMatch, type SimPlayer } from "./sim";
 
@@ -73,8 +73,8 @@ export async function runMatch(admin: DB, matchId: string) {
       home_score: score[0],
       away_score: score[1],
       started_at: new Date().toISOString(),
-      events: events as unknown as Database["public"]["Tables"]["matches"]["Update"]["events"],
-      stats: stats as unknown as Database["public"]["Tables"]["matches"]["Update"]["stats"],
+      events: events as unknown as Json,
+      stats: stats as unknown as Json,
     })
     .eq("id", matchId)
     .eq("status", "scheduled")
@@ -119,7 +119,7 @@ export async function runMatch(admin: DB, matchId: string) {
   const { count } = await admin
     .from("matches")
     .select("id", { count: "exact", head: true })
-    .eq("round_id", match.round_id)
+    .eq("round_id", match.round_id ?? "")
     .neq("status", "finished");
-  if ((count ?? 0) === 0) await admin.from("rounds").update({ status: "completed" }).eq("id", match.round_id);
+  if (match.round_id && (count ?? 0) === 0) await admin.from("rounds").update({ status: "completed" }).eq("id", match.round_id);
 }
