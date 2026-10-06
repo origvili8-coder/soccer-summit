@@ -34,49 +34,67 @@ export type Database = {
       }
       matches: {
         Row: {
+          away_formation: string
           away_ready: boolean
           away_score: number
           away_team_id: string
+          away_xi: Json
           created_at: string
           events: Json
+          home_formation: string
           home_ready: boolean
           home_score: number
           home_team_id: string
+          home_xi: Json
           id: string
-          round_id: string
+          is_friendly: boolean
+          round_id: string | null
           started_at: string | null
           stats: Json
           status: string
+          subs: Json
         }
         Insert: {
+          away_formation?: string
           away_ready?: boolean
           away_score?: number
           away_team_id: string
+          away_xi?: Json
           created_at?: string
           events?: Json
+          home_formation?: string
           home_ready?: boolean
           home_score?: number
           home_team_id: string
+          home_xi?: Json
           id?: string
-          round_id: string
+          is_friendly?: boolean
+          round_id?: string | null
           started_at?: string | null
           stats?: Json
           status?: string
+          subs?: Json
         }
         Update: {
+          away_formation?: string
           away_ready?: boolean
           away_score?: number
           away_team_id?: string
+          away_xi?: Json
           created_at?: string
           events?: Json
+          home_formation?: string
           home_ready?: boolean
           home_score?: number
           home_team_id?: string
+          home_xi?: Json
           id?: string
-          round_id?: string
+          is_friendly?: boolean
+          round_id?: string | null
           started_at?: string | null
           stats?: Json
           status?: string
+          subs?: Json
         }
         Relationships: [
           {
@@ -107,6 +125,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          match_id: string | null
           offer_id: string | null
           recipient_id: string
           sender_id: string
@@ -115,6 +134,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          match_id?: string | null
           offer_id?: string | null
           recipient_id: string
           sender_id?: string
@@ -123,11 +143,19 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          match_id?: string | null
           offer_id?: string | null
           recipient_id?: string
           sender_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_offer_id_fkey"
             columns: ["offer_id"]
